@@ -32,7 +32,7 @@
             margin-top: 0;
         }
 
-        select, input, button {
+        input, button {
             margin-top: 10px;
             padding: 12px;
             width: 100%;
@@ -78,8 +78,8 @@
 
         <div id="playerInputSection" style="display: none;">
             <h3>Add Players</h3>
-            <select id="playerDropdown" onchange="selectExistingPlayer()"></select>
-            <input type="text" id="playerName" placeholder="Enter player name">
+            <input list="playerListDropdown" id="playerName" placeholder="Enter or select player name">
+            <datalist id="playerListDropdown"></datalist>
             <button onclick="addPlayer()">Add</button>
             <h4>Selected Players:</h4>
             <ul id="playerList"></ul>
@@ -93,14 +93,12 @@
 
         document.addEventListener("DOMContentLoaded", () => {
             let storedPlayers = JSON.parse(localStorage.getItem("players")) || [];
-            let dropdown = document.getElementById('playerDropdown');
-
-            dropdown.innerHTML = '<option value="">Enter new player</option>';
+            let dataList = document.getElementById('playerListDropdown');
+            dataList.innerHTML = '';
             storedPlayers.forEach(player => {
                 let option = document.createElement('option');
                 option.value = player;
-                option.textContent = player;
-                dropdown.appendChild(option);
+                dataList.appendChild(option);
             });
         });
 
@@ -110,18 +108,9 @@
                 alert('Please enter a valid number of players');
                 return;
             }
-
-            addedPlayers = JSON.parse(localStorage.getItem("players")) || [];
+            addedPlayers = [];
             document.getElementById('playerInputSection').style.display = 'block';
             document.getElementById('playerList').innerHTML = '';
-        }
-
-        function selectExistingPlayer() {
-            let dropdown = document.getElementById('playerDropdown');
-            let input = document.getElementById('playerName');
-            if (dropdown.value) {
-                input.value = dropdown.value;
-            }
         }
 
         function addPlayer() {
@@ -142,18 +131,18 @@
                 addedPlayers.push(playerName);
                 localStorage.setItem('players', JSON.stringify(addedPlayers));
 
-                playerList.innerHTML = '';
-                addedPlayers.forEach(player => {
-                    let listItem = document.createElement('li');
-                    listItem.textContent = player;
-                    playerList.appendChild(listItem);
-                });
+                let listItem = document.createElement('li');
+                listItem.textContent = playerName;
+                playerList.appendChild(listItem);
             }
-
             input.value = '';
         }
 
         function startGame() {
+            if (addedPlayers.length < totalPlayers) {
+                alert(`Please add ${totalPlayers - addedPlayers.length} more player(s) before starting the game.`);
+                return;
+            }
             localStorage.setItem('players', JSON.stringify(addedPlayers));
             window.location.href = 'game.html';
         }
