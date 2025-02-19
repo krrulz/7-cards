@@ -57,7 +57,7 @@
             background-color: #ffffff;
         }
 
-        /* Input Field Styling */
+        /* Input Styling */
         .input-container {
             margin-top: 20px;
             display: flex;
@@ -147,12 +147,10 @@
         let eliminatedPlayers = JSON.parse(localStorage.getItem('eliminatedPlayers')) || [];
         let gameNumber = JSON.parse(localStorage.getItem('gameNumber')) || 1;
 
-        // New function to adjust font size based on number of players
         function adjustFontSize() {
             const playerCount = players.length;
-            let fontSize = 16; // Default font size
+            let fontSize = 16;
 
-            // Adjust the font size based on the number of players
             if (playerCount > 10) {
                 fontSize = 12;
             } else if (playerCount > 5) {
@@ -164,7 +162,6 @@
             });
         }
 
-        // Function to download the game result as CSV
         function downloadCSV() {
             const header = ['Game Number', ...players];
             const rows = [];
@@ -183,7 +180,6 @@
                 csvContent += row.join(',') + '\n';
             });
 
-            // Create a downloadable link
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement('a');
             link.setAttribute('href', encodedUri);
@@ -218,7 +214,7 @@
             localStorage.setItem('gameNumber', JSON.stringify(gameNumber));
             localStorage.setItem('eliminatedPlayers', JSON.stringify(eliminatedPlayers));
 
-            adjustFontSize();  // Adjust font size dynamically
+            adjustFontSize();
         }
 
         function submitRound() {
@@ -229,7 +225,7 @@
 
             players.forEach(player => {
                 if (eliminatedPlayers.includes(player)) {
-                    newRow.innerHTML += "<td>-</td>"; // Keep empty slot for eliminated players in past games
+                    newRow.innerHTML += "<td>-</td>";
                     return;
                 }
 
@@ -255,31 +251,12 @@
 
             updateTableHeaders();
 
-            localStorage.setItem('players', JSON.stringify(players));
-            localStorage.setItem('scores', JSON.stringify(scores));
-            localStorage.setItem('gameNumber', JSON.stringify(gameNumber));
-            localStorage.setItem('eliminatedPlayers', JSON.stringify(eliminatedPlayers));
-
-            // Check if there's a winner (only 1 player remaining)
             if (players.length - eliminatedPlayers.length === 1) {
                 const winner = players.find(player => !eliminatedPlayers.includes(player));
                 alert(`${winner} is the winner!`);
                 document.getElementById("playerInputs").innerHTML = `<h3>${winner} is the winner!</h3>`;
+                downloadCSV();
             }
-
-            // Check for game over condition
-            if (players.length === eliminatedPlayers.length) {
-                alert("Game Over! No players remaining.");
-            }
-
-            downloadCSV();  // Save the CSV after every round
-        }
-
-        function updateTableHeaders() {
-            document.getElementById("scoreHeader").innerHTML = "<th>Game Number</th>";
-            players.forEach(player => {
-                document.getElementById("scoreHeader").innerHTML += `<th>${player}</th>`;
-            });
         }
 
         function resetGame() {
