@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Game Scoreboard</title>
     <style>
+        /* General Styles */
         body {
             font-family: Arial, sans-serif;
             text-align: center;
@@ -21,6 +22,8 @@
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
+
+        /* Button Styles */
         button {
             background-color: #28a745;
             color: white;
@@ -34,6 +37,8 @@
         button:hover {
             background-color: #218838;
         }
+
+        /* Table Styles */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -51,6 +56,8 @@
         td {
             background-color: #ffffff;
         }
+
+        /* Input Field Styling */
         .input-container {
             margin-top: 20px;
             display: flex;
@@ -79,14 +86,25 @@
             border-radius: 5px;
             border: 1px solid #ddd;
         }
+
+        .input-container h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
         .input-container button {
             width: 100%;
             max-width: 300px;
             margin-top: 10px;
         }
+
+        /* Responsive Design */
         @media (max-width: 600px) {
             .container {
                 width: 95%;
+            }
+            .player-input {
+                max-width: 100%;
             }
         }
     </style>
@@ -95,7 +113,6 @@
     <div class="container">
         <h2>Game Scoreboard</h2>
         <button onclick="resetGame()">Start New Game</button>
-        <button onclick="downloadCSV()">Download CSV</button>
 
         <table id="scoreTable">
             <thead>
@@ -105,15 +122,18 @@
             </thead>
             <tbody></tbody>
         </table>
-
+        
         <h3>Player Accumulated Scores</h3>
         <table id="playerScoreTable">
             <thead>
-                <tr><th>Player</th><th>Total Score</th></tr>
+                <tr>
+                    <th>Player</th>
+                    <th>Total Score</th>
+                </tr>
             </thead>
             <tbody></tbody>
         </table>
-
+        
         <div class="input-container">
             <h3>Enter Round Points</h3>
             <div id="playerInputs"></div>
@@ -127,10 +147,12 @@
         let eliminatedPlayers = JSON.parse(localStorage.getItem('eliminatedPlayers')) || [];
         let gameNumber = JSON.parse(localStorage.getItem('gameNumber')) || 1;
 
+        // New function to adjust font size based on number of players
         function adjustFontSize() {
             const playerCount = players.length;
-            let fontSize = 16;
+            let fontSize = 16; // Default font size
 
+            // Adjust the font size based on the number of players
             if (playerCount > 10) {
                 fontSize = 12;
             } else if (playerCount > 5) {
@@ -140,6 +162,34 @@
             document.querySelectorAll('#scoreTable th, #scoreTable td').forEach(cell => {
                 cell.style.fontSize = `${fontSize}px`;
             });
+        }
+
+        // Function to download the game result as CSV
+        function downloadCSV() {
+            const header = ['Game Number', ...players];
+            const rows = [];
+            const gameData = document.querySelectorAll('#scoreTable tbody tr');
+
+            gameData.forEach(row => {
+                const rowData = [];
+                row.querySelectorAll('td').forEach(cell => {
+                    rowData.push(cell.innerText);
+                });
+                rows.push(rowData);
+            });
+
+            let csvContent = "data:text/csv;charset=utf-8," + header.join(',') + '\n';
+            rows.forEach(row => {
+                csvContent += row.join(',') + '\n';
+            });
+
+            // Create a downloadable link
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement('a');
+            link.setAttribute('href', encodedUri);
+            link.setAttribute('download', 'game_results.csv');
+            document.body.appendChild(link);
+            link.click();
         }
 
         function initializeGame() {
@@ -168,7 +218,7 @@
             localStorage.setItem('gameNumber', JSON.stringify(gameNumber));
             localStorage.setItem('eliminatedPlayers', JSON.stringify(eliminatedPlayers));
 
-            adjustFontSize();
+            adjustFontSize();  // Adjust font size dynamically
         }
 
         function submitRound() {
@@ -179,7 +229,7 @@
 
             players.forEach(player => {
                 if (eliminatedPlayers.includes(player)) {
-                    newRow.innerHTML += "<td>-</td>";
+                    newRow.innerHTML += "<td>-</td>"; // Keep empty slot for eliminated players in past games
                     return;
                 }
 
@@ -203,25 +253,33 @@
                 eliminatedPlayers.push(player);
             });
 
+            updateTableHeaders();
+
+            localStorage.setItem('players', JSON.stringify(players));
+            localStorage.setItem('scores', JSON.stringify(scores));
+            localStorage.setItem('gameNumber', JSON.stringify(gameNumber));
+            localStorage.setItem('eliminatedPlayers', JSON.stringify(eliminatedPlayers));
+
+            // Check if there's a winner (only 1 player remaining)
             if (players.length - eliminatedPlayers.length === 1) {
                 const winner = players.find(player => !eliminatedPlayers.includes(player));
                 alert(`${winner} is the winner!`);
                 document.getElementById("playerInputs").innerHTML = `<h3>${winner} is the winner!</h3>`;
-                resetScores();
-                downloadCSV();
             }
 
-            localStorage.setItem('scores', JSON.stringify(scores));
-            localStorage.setItem('eliminatedPlayers', JSON.stringify(eliminatedPlayers));
-            localStorage.setItem('gameNumber', JSON.stringify(gameNumber));
+            // Check for game over condition
+            if (players.length === eliminatedPlayers.length) {
+                alert("Game Over! No players remaining.");
+            }
+
+            downloadCSV();  // Save the CSV after every round
         }
 
-        function resetScores() {
+        function updateTableHeaders() {
+            document.getElementById("scoreHeader").innerHTML = "<th>Game Number</th>";
             players.forEach(player => {
-                scores[player] = 0;
-                document.getElementById(`score-${player}`).innerText = "0";
+                document.getElementById("scoreHeader").innerHTML += `<th>${player}</th>`;
             });
-            localStorage.setItem('scores', JSON.stringify(scores));
         }
 
         function resetGame() {
@@ -232,32 +290,6 @@
             gameNumber = 1;
             localStorage.setItem('players', JSON.stringify(players));
             initializeGame();
-        }
-
-        function downloadCSV() {
-            const header = ['Game Number', ...players];
-            const rows = [];
-            const gameData = document.querySelectorAll('#scoreTable tbody tr');
-
-            gameData.forEach(row => {
-                const rowData = [];
-                row.querySelectorAll('td').forEach(cell => {
-                    rowData.push(cell.innerText);
-                });
-                rows.push(rowData);
-            });
-
-            let csvContent = "data:text/csv;charset=utf-8," + header.join(',') + '\n';
-            rows.forEach(row => {
-                csvContent += row.join(',') + '\n';
-            });
-
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement('a');
-            link.setAttribute('href', encodedUri);
-            link.setAttribute('download', 'game_results.csv');
-            document.body.appendChild(link);
-            link.click();
         }
 
         document.addEventListener("DOMContentLoaded", initializeGame);
