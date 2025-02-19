@@ -147,7 +147,7 @@
         let eliminatedPlayers = JSON.parse(localStorage.getItem('eliminatedPlayers')) || [];
         let gameNumber = JSON.parse(localStorage.getItem('gameNumber')) || 1;
 
-        // New function to adjust font size based on number of players
+        // Function to adjust font size based on number of players
         function adjustFontSize() {
             const playerCount = players.length;
             let fontSize = 16; // Default font size
@@ -201,11 +201,18 @@
             players.forEach(player => {
                 scores[player] = scores[player] || 0;
                 document.getElementById("scoreHeader").innerHTML += `<th>${player}</th>`;
-                document.getElementById("playerInputs").innerHTML += `
-                    <div class="player-input">
-                        <label>${player}:</label>
-                        <input type='number' id='${player}' min='0'>
-                    </div>`;
+                const playerInputContainer = document.createElement("div");
+                playerInputContainer.classList.add("player-input");
+                const label = document.createElement("label");
+                label.textContent = player + ":";
+                const input = document.createElement("input");
+                input.type = "number";
+                input.id = player;
+                input.min = "0";
+                playerInputContainer.appendChild(label);
+                playerInputContainer.appendChild(input);
+                document.getElementById("playerInputs").appendChild(playerInputContainer);
+
                 document.querySelector("#playerScoreTable tbody").innerHTML += `
                     <tr id='row-${player}'>
                         <td>${player}</td>
@@ -251,6 +258,11 @@
             toBeEliminated.forEach(player => {
                 alert(`${player} is eliminated!`);
                 eliminatedPlayers.push(player);
+
+                // Disable the input field of the eliminated player
+                document.getElementById(player).disabled = true;
+                // Optionally hide their input field
+                document.getElementById(player).parentElement.style.display = 'none';
             });
 
             updateTableHeaders();
@@ -265,14 +277,15 @@
                 const winner = players.find(player => !eliminatedPlayers.includes(player));
                 alert(`${winner} is the winner!`);
                 document.getElementById("playerInputs").innerHTML = `<h3>${winner} is the winner!</h3>`;
+
+                // Now, download the CSV after the winner is identified
+                downloadCSV();  // Save the CSV only after the winner is announced
             }
 
             // Check for game over condition
             if (players.length === eliminatedPlayers.length) {
                 alert("Game Over! No players remaining.");
             }
-
-            downloadCSV();  // Save the CSV after every round
         }
 
         function updateTableHeaders() {
