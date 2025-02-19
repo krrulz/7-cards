@@ -78,7 +78,7 @@
 
         <div id="playerInputSection" style="display: none;">
             <h3>Add Players</h3>
-            <select id="playerDropdown"></select>
+            <select id="playerDropdown" onchange="selectExistingPlayer()"></select>
             <input type="text" id="playerName" placeholder="Enter player name">
             <button onclick="addPlayer()">Add</button>
             <h4>Selected Players:</h4>
@@ -116,10 +116,17 @@
             document.getElementById('playerList').innerHTML = '';
         }
 
-        function addPlayer() {
+        function selectExistingPlayer() {
             let dropdown = document.getElementById('playerDropdown');
             let input = document.getElementById('playerName');
-            let playerName = input.value.trim() || dropdown.value;
+            if (dropdown.value) {
+                input.value = dropdown.value;
+            }
+        }
+
+        function addPlayer() {
+            let input = document.getElementById('playerName');
+            let playerName = input.value.trim();
             let playerList = document.getElementById('playerList');
 
             if (playerName === '') {
