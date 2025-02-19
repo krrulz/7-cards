@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Game Scoreboard</title>
     <style>
-        /* General Styles */
         body {
             font-family: Arial, sans-serif;
             text-align: center;
@@ -128,6 +127,21 @@
         let eliminatedPlayers = JSON.parse(localStorage.getItem('eliminatedPlayers')) || [];
         let gameNumber = JSON.parse(localStorage.getItem('gameNumber')) || 1;
 
+        function adjustFontSize() {
+            const playerCount = players.length;
+            let fontSize = 16;
+
+            if (playerCount > 10) {
+                fontSize = 12;
+            } else if (playerCount > 5) {
+                fontSize = 14;
+            }
+
+            document.querySelectorAll('#scoreTable th, #scoreTable td').forEach(cell => {
+                cell.style.fontSize = `${fontSize}px`;
+            });
+        }
+
         function initializeGame() {
             document.getElementById("scoreHeader").innerHTML = "<th>Game Number</th>";
             document.querySelector("#scoreTable tbody").innerHTML = "";
@@ -153,6 +167,8 @@
             localStorage.setItem('scores', JSON.stringify(scores));
             localStorage.setItem('gameNumber', JSON.stringify(gameNumber));
             localStorage.setItem('eliminatedPlayers', JSON.stringify(eliminatedPlayers));
+
+            adjustFontSize();
         }
 
         function submitRound() {
@@ -191,12 +207,21 @@
                 const winner = players.find(player => !eliminatedPlayers.includes(player));
                 alert(`${winner} is the winner!`);
                 document.getElementById("playerInputs").innerHTML = `<h3>${winner} is the winner!</h3>`;
+                resetScores();
                 downloadCSV();
             }
 
             localStorage.setItem('scores', JSON.stringify(scores));
             localStorage.setItem('eliminatedPlayers', JSON.stringify(eliminatedPlayers));
             localStorage.setItem('gameNumber', JSON.stringify(gameNumber));
+        }
+
+        function resetScores() {
+            players.forEach(player => {
+                scores[player] = 0;
+                document.getElementById(`score-${player}`).innerText = "0";
+            });
+            localStorage.setItem('scores', JSON.stringify(scores));
         }
 
         function resetGame() {
