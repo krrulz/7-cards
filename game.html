@@ -22,8 +22,6 @@
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
-
-        /* Button Styles */
         button {
             background-color: #28a745;
             color: white;
@@ -37,8 +35,6 @@
         button:hover {
             background-color: #218838;
         }
-
-        /* Table Styles */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -56,8 +52,6 @@
         td {
             background-color: #ffffff;
         }
-
-        /* Input Styling */
         .input-container {
             margin-top: 20px;
             display: flex;
@@ -86,25 +80,14 @@
             border-radius: 5px;
             border: 1px solid #ddd;
         }
-
-        .input-container h3 {
-            font-size: 20px;
-            margin-bottom: 10px;
-        }
-
         .input-container button {
             width: 100%;
             max-width: 300px;
             margin-top: 10px;
         }
-
-        /* Responsive Design */
         @media (max-width: 600px) {
             .container {
                 width: 95%;
-            }
-            .player-input {
-                max-width: 100%;
             }
         }
     </style>
@@ -113,6 +96,7 @@
     <div class="container">
         <h2>Game Scoreboard</h2>
         <button onclick="resetGame()">Start New Game</button>
+        <button onclick="downloadCSV()">Download CSV</button>
 
         <table id="scoreTable">
             <thead>
@@ -122,18 +106,15 @@
             </thead>
             <tbody></tbody>
         </table>
-        
+
         <h3>Player Accumulated Scores</h3>
         <table id="playerScoreTable">
             <thead>
-                <tr>
-                    <th>Player</th>
-                    <th>Total Score</th>
-                </tr>
+                <tr><th>Player</th><th>Total Score</th></tr>
             </thead>
             <tbody></tbody>
         </table>
-        
+
         <div class="input-container">
             <h3>Enter Round Points</h3>
             <div id="playerInputs"></div>
@@ -146,47 +127,6 @@
         let scores = JSON.parse(localStorage.getItem('scores')) || {};
         let eliminatedPlayers = JSON.parse(localStorage.getItem('eliminatedPlayers')) || [];
         let gameNumber = JSON.parse(localStorage.getItem('gameNumber')) || 1;
-
-        function adjustFontSize() {
-            const playerCount = players.length;
-            let fontSize = 16;
-
-            if (playerCount > 10) {
-                fontSize = 12;
-            } else if (playerCount > 5) {
-                fontSize = 14;
-            }
-
-            document.querySelectorAll('#scoreTable th, #scoreTable td').forEach(cell => {
-                cell.style.fontSize = `${fontSize}px`;
-            });
-        }
-
-        function downloadCSV() {
-            const header = ['Game Number', ...players];
-            const rows = [];
-            const gameData = document.querySelectorAll('#scoreTable tbody tr');
-
-            gameData.forEach(row => {
-                const rowData = [];
-                row.querySelectorAll('td').forEach(cell => {
-                    rowData.push(cell.innerText);
-                });
-                rows.push(rowData);
-            });
-
-            let csvContent = "data:text/csv;charset=utf-8," + header.join(',') + '\n';
-            rows.forEach(row => {
-                csvContent += row.join(',') + '\n';
-            });
-
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement('a');
-            link.setAttribute('href', encodedUri);
-            link.setAttribute('download', 'game_results.csv');
-            document.body.appendChild(link);
-            link.click();
-        }
 
         function initializeGame() {
             document.getElementById("scoreHeader").innerHTML = "<th>Game Number</th>";
@@ -213,8 +153,6 @@
             localStorage.setItem('scores', JSON.stringify(scores));
             localStorage.setItem('gameNumber', JSON.stringify(gameNumber));
             localStorage.setItem('eliminatedPlayers', JSON.stringify(eliminatedPlayers));
-
-            adjustFontSize();
         }
 
         function submitRound() {
@@ -249,14 +187,16 @@
                 eliminatedPlayers.push(player);
             });
 
-            updateTableHeaders();
-
             if (players.length - eliminatedPlayers.length === 1) {
                 const winner = players.find(player => !eliminatedPlayers.includes(player));
                 alert(`${winner} is the winner!`);
                 document.getElementById("playerInputs").innerHTML = `<h3>${winner} is the winner!</h3>`;
                 downloadCSV();
             }
+
+            localStorage.setItem('scores', JSON.stringify(scores));
+            localStorage.setItem('eliminatedPlayers', JSON.stringify(eliminatedPlayers));
+            localStorage.setItem('gameNumber', JSON.stringify(gameNumber));
         }
 
         function resetGame() {
@@ -267,6 +207,32 @@
             gameNumber = 1;
             localStorage.setItem('players', JSON.stringify(players));
             initializeGame();
+        }
+
+        function downloadCSV() {
+            const header = ['Game Number', ...players];
+            const rows = [];
+            const gameData = document.querySelectorAll('#scoreTable tbody tr');
+
+            gameData.forEach(row => {
+                const rowData = [];
+                row.querySelectorAll('td').forEach(cell => {
+                    rowData.push(cell.innerText);
+                });
+                rows.push(rowData);
+            });
+
+            let csvContent = "data:text/csv;charset=utf-8," + header.join(',') + '\n';
+            rows.forEach(row => {
+                csvContent += row.join(',') + '\n';
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement('a');
+            link.setAttribute('href', encodedUri);
+            link.setAttribute('download', 'game_results.csv');
+            document.body.appendChild(link);
+            link.click();
         }
 
         document.addEventListener("DOMContentLoaded", initializeGame);
