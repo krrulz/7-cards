@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Scoreboard</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f2f5;
+        }
+        .container {
+            max-width: 90%;
+            width: 600px;
+            margin: 20px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Button Styles */
+        button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+
+        /* Table Styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        td {
+            background-color: #ffffff;
+        }
+
+        /* Input Field Styling */
+        .input-container {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .player-input {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 300px;
+            margin-bottom: 10px;
+        }
+        .player-input label {
+            flex: 1;
+            text-align: left;
+        }
+        .player-input input {
+            width: 50px;
+            text-align: center;
+            padding: 5px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            .container {
+                width: 95%;
+            }
+            .player-input {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Game Scoreboard</h2>
+        <button onclick="resetGame()">Start New Game</button>
+
+        <table id="scoreTable">
+            <thead>
+                <tr id="scoreHeader">
+                    <th>Game Number</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        
+        <h3>Player Accumulated Scores</h3>
+        <table id="playerScoreTable">
+            <thead>
+                <tr>
+                    <th>Player</th>
+                    <th>Total Score</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        
+        <div class="input-container">
+            <h3>Enter Round Points</h3>
+            <div id="playerInputs"></div>
+            <button onclick="submitRound()">Submit Round</button>
+        </div>
+    </div>
+
+    <script>
+        let players = JSON.parse(localStorage.getItem('players')) || [];
+        let scores = JSON.parse(localStorage.getItem('scores')) || {};
+        let eliminatedPlayers = JSON.parse(localStorage.getItem('eliminatedPlayers')) || [];
+        let gameNumber = JSON.parse(localStorage.getItem('gameNumber')) || 1;
+
+        function initializeGame() {
+            document.getElementById("scoreHeader").innerHTML = "<th>Game Number</th>";
+            document.querySelector("#scoreTable tbody").innerHTML = "";
+            document.querySelector("#playerScoreTable tbody").innerHTML = "";
+            document.getElementById("playerInputs").innerHTML = "";
+
+            players.forEach(player => {
+                scores[player] = scores[player] || 0;
+                document.getElementById("scoreHeader").innerHTML += `<th>${player}</th>`;
+                document.getElementById("playerInputs").innerHTML += `
+                    <div class="player-input">
+                        <label>${player}:</label>
+                        <input type='number' id='${player}' min='0'>
+                    </div>`;
+                document.querySelector("#playerScoreTable tbody").innerHTML += `
+                    <tr id='row-${player}'>
+                        <td>${player}</td>
+                        <td id='score-${player}'>${scores[player]}</td>
+                    </tr>`;
+            });
+
+            localStorage.setItem('players', JSON.stringify(players));
+            localStorage.setItem('scores', JSON.stringify(scores));
+            localStorage.setItem('gameNumber', JSON.stringify(gameNumber));
+            localStorage.setItem('eliminatedPlayers', JSON.stringify(eliminatedPlayers));
+        }
+
+        function submitRound() {
+            let newRow = document.createElement("tr");
+            newRow.innerHTML = `<td>${gameNumber}</td>`;
+
+            let toBeEliminated = [];
+
+            players.forEach(player => {
+                if (eliminatedPlayers.includes(player)) {
+                    newRow.innerHTML += "<td>-</td>"; // Keep empty slot for eliminated players in past games
+                    return;
+                }
+
+                let input = document.getElementById(player);
+                let points = parseInt(input.value) || 0;
+                scores[player] += points;
+
+                newRow.innerHTML += `<td>${points}</td>`;
+                document.getElementById(`score-${player}`).innerText = scores[player];
+
+                if (scores[player] >= 120) {
+                    toBeEliminated.push(player);
+                }
+            });
+
+            document.querySelector("#scoreTable tbody").appendChild(newRow);
+            gameNumber++;
+
+            toBeEliminated.forEach(player => {
+                alert(`${player} is eliminated!`);
+                eliminatedPlayers.push(player);
+            });
+
+            updateTableHeaders();
+
+            localStorage.setItem('players', JSON.stringify(players));
+            localStorage.setItem('scores', JSON.stringify(scores));
+            localStorage.setItem('gameNumber', JSON.stringify(gameNumber));
+            localStorage.setItem('eliminatedPlayers', JSON.stringify(eliminatedPlayers));
+
+            // Check if there's a winner (only 1 player remaining)
+            if (players.length - eliminatedPlayers.length === 1) {
+                const winner = players.find(player => !eliminatedPlayers.includes(player));
+                alert(`${winner} is the winner!`);
+                document.getElementById("playerInputs").innerHTML = `<h3>${winner} is the winner!</h3>`;
+            }
+
+            // Check for game over condition
+            if (players.length === eliminatedPlayers.length) {
+                alert("Game Over! No players remaining.");
+            }
+        }
+
+        function updateTableHeaders() {
+            document.getElementById("scoreHeader").innerHTML = "<th>Game Number</th>";
+            players.forEach(player => {
+                document.getElementById("scoreHeader").innerHTML += `<th>${player}</th>`;
+            });
+        }
+
+        function resetGame() {
+            localStorage.clear();
+            players = prompt("Enter player names separated by commas:").split(",").map(p => p.trim());
+            scores = {};
+            eliminatedPlayers = [];
+            gameNumber = 1;
+            localStorage.setItem('players', JSON.stringify(players));
+            initializeGame();
+        }
+
+        document.addEventListener("DOMContentLoaded", initializeGame);
+    </script>
+</body>
+</html>
