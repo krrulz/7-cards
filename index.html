@@ -91,18 +91,18 @@
         let totalPlayers = 0;
         let addedPlayers = [];
 
-        function loadExistingPlayers() {
+        document.addEventListener("DOMContentLoaded", () => {
+            let storedPlayers = JSON.parse(localStorage.getItem("players")) || [];
             let dropdown = document.getElementById('playerDropdown');
+
             dropdown.innerHTML = '<option value="">Enter new player</option>';
-            addedPlayers.forEach(player => {
-                if (typeof player === 'string' && player.trim() !== '') {
-                    let option = document.createElement('option');
-                    option.value = player;
-                    option.textContent = player;
-                    dropdown.appendChild(option);
-                }
+            storedPlayers.forEach(player => {
+                let option = document.createElement('option');
+                option.value = player;
+                option.textContent = player;
+                dropdown.appendChild(option);
             });
-        }
+        });
 
         function startAddingPlayers() {
             totalPlayers = parseInt(document.getElementById('playerCount').value);
@@ -111,12 +111,9 @@
                 return;
             }
 
-            addedPlayers = [];
-            localStorage.setItem('players', JSON.stringify(addedPlayers));
-
+            addedPlayers = JSON.parse(localStorage.getItem("players")) || [];
             document.getElementById('playerInputSection').style.display = 'block';
             document.getElementById('playerList').innerHTML = '';
-            loadExistingPlayers();
         }
 
         function addPlayer() {
@@ -144,8 +141,6 @@
                     listItem.textContent = player;
                     playerList.appendChild(listItem);
                 });
-
-                loadExistingPlayers();
             }
 
             input.value = '';
