@@ -137,7 +137,7 @@
         <div class="input-container">
             <h3>Enter Round Points</h3>
             <div id="playerInputs"></div>
-            <button onclick="submitRound()">Submit Round</button>
+            <button id="submitRoundButton" onclick="submitRound()">Submit Round</button>
         </div>
     </div>
 
@@ -280,6 +280,17 @@
 
                 // Now, download the CSV after the winner is identified
                 downloadCSV();  // Save the CSV only after the winner is announced
+
+                // Reset eliminated players' scores
+                eliminatedPlayers.forEach(player => {
+                    scores[player] = 0;
+                    document.getElementById(`score-${player}`).innerText = 0;
+                });
+
+                // Change the Submit button to Close button
+                const submitButton = document.getElementById("submitRoundButton");
+                submitButton.textContent = "Close Game";
+                submitButton.setAttribute("onclick", "window.close()");
             }
 
             // Check for game over condition
